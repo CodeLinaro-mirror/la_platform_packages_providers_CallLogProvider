@@ -24,6 +24,5 @@ android_test {
         "flag-junit",
         "mockito-target",
         "platform-test-annotations",
-        "calllogbackup_flags_java_lib",
     ],
 }
