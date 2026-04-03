@@ -17,7 +17,6 @@
 package com.android.calllogbackup;
 
 import static android.provider.CallLog.Calls.MISSED_REASON_NOT_MISSED;
-import static com.android.calllogbackup.Flags.batchDeduplicationEnabled;
 
 import android.app.backup.BackupAgent;
 import android.app.backup.BackupDataInput;
@@ -322,37 +321,26 @@ public class CallLogBackupAgent extends BackupAgent {
 
         List<Call> callsToRestore = getCallsToRestoreFromBackupData(data);
 
-        if (batchDeduplicationEnabled()) {
-            if (hasExistingCallLogs()) {
-                Map<String, Call> callMap = new HashMap<>();
+        if (hasExistingCallLogs()) {
+            Map<String, Call> callMap = new HashMap<>();
 
-                for (Call call : callsToRestore) {
-                    String key = getCallKey(call.date, call.number);
-                    callMap.put(key, call);
+            for (Call call : callsToRestore) {
+                String key = getCallKey(call.date, call.number);
+                callMap.put(key, call);
 
-                    if (callMap.size() >= getBatchSize()) {
-                        restoreCallBatch(callMap);
-                        // Clear the map for the next batch
-                        callMap.clear();
-                    }
-                }
-
-                if (!callMap.isEmpty()) {
+                if (callMap.size() >= getBatchSize()) {
                     restoreCallBatch(callMap);
+                    // Clear the map for the next batch
+                    callMap.clear();
                 }
-            } else {
-                // No existing call logs, so no need for deduplication
-                performRestoreWithoutDeduplication(callsToRestore);
+            }
+
+            if (!callMap.isEmpty()) {
+                restoreCallBatch(callMap);
             }
         } else {
-            for (Call call : callsToRestore) {
-                if (!isDuplicateCall(call)) {
-                    writeAndLogCall(call);
-                    if (isDebug()) {
-                        Log.d(TAG, "Restored call: " + call);
-                    }
-                }
-            }
+            // No existing call logs, so no need for deduplication
+            performRestoreWithoutDeduplication(callsToRestore);
         }
 
         Log.i(TAG, "Actual restored call logs count: " + mRestoredCount);
@@ -438,20 +426,6 @@ public class CallLogBackupAgent extends BackupAgent {
                     callMap.remove(key);
                 } while (cursor.moveToNext());
             }
-        }
-    }
-
-    private boolean isDuplicateCall(Call call) {
-        // Build the query selection
-        String[] selectionArgs = new String[]{String.valueOf(call.date), call.number};
-
-        // Query the call log provider. We only need to check for the existence of a call with
-        // the same date and number, so we only select the _ID column.
-        try (Cursor cursor = getContentResolver().query(CallLog.Calls.CONTENT_URI,
-                new String[]{CallLog.Calls._ID}, SELECTION_CALL_DATE_AND_NUMBER,
-                selectionArgs, /* sortOrder */ null)) {
-
-            return cursor != null && cursor.moveToFirst();
         }
     }
 

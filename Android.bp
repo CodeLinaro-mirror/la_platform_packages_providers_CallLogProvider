@@ -9,7 +9,6 @@ android_app {
     srcs: ["src/**/*.java"],
 
     static_libs: [
-        "calllogbackup_flags_java_lib",
         "telecom-util-lib",
     ],
 
@@ -28,16 +27,4 @@ android_app {
         proguard_flags_files: ["proguard.flags"],
     },
 
-}
-
-java_aconfig_library {
-    name: "calllogbackup_flags_java_lib",
-    aconfig_declarations: "calllogbackup_flags",
-}
-
-aconfig_declarations {
-    name: "calllogbackup_flags",
-    container: "system",
-    package: "com.android.calllogbackup",
-    srcs: ["**/calllogbackup_flags.aconfig"],
 }
