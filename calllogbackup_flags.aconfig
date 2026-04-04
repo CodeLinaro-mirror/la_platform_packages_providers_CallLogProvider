@@ -1,0 +1,9 @@
+package: "com.android.calllogbackup"
+container: "system"
+
+flag {
+    name: "batch_deduplication_enabled"
+    namespace: "telecom"
+    description: "Enables batch deduplication of call log entries during restore operations for improved efficiency."
+    bug: "388203097"
+}
